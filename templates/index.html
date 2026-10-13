@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Atlas Humano | Diccionario anatómico</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="{{ url_for('index') }}"><span class="brand-icon">✚</span><span><b>Atlas Humano</b><small>Explora tu anatomía</small></span></a>
+    <nav>
+      <a class="nav-link active" href="{{ url_for('index') }}">⌂ <span>Inicio</span></a>
+      <div class="nav-heading">EXPLORAR</div>
+      <a class="nav-link" href="{{ url_for('index') }}#categorias">▦ <span>Categorías</span></a>
+      <a class="nav-link" href="{{ url_for('index') }}#conceptos">◈ <span>Conceptos</span></a>
+    </nav>
+    <div class="sidebar-bottom"><span class="pulse"></span> Aprende a tu ritmo<small>Proyecto educativo · Flask + MySQL</small></div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="mobile-brand">✚ Atlas Humano</div>
+      <form class="search" action="{{ url_for('index') }}" method="get">
+        <span>⌕</span>
+        <input name="q" value="{{ q }}" placeholder="Busca un órgano, hueso, músculo..." aria-label="Buscar conceptos">
+        {% if categoria %}<input type="hidden" name="categoria" value="{{ categoria }}">{% endif %}
+        <button type="submit">Buscar</button>
+      </form>
+      <span class="top-label">DICCIONARIO ANATÓMICO</span>
+    </header>
+
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow"><span></span> TU GUÍA DEL CUERPO HUMANO</div>
+        <h1>Conoce tu cuerpo.<br><em>Descubre cómo funciona.</em></h1>
+        <p>Explora órganos, huesos y músculos con explicaciones sencillas, funciones y datos curiosos.</p>
+        <a class="hero-button" href="#conceptos">Explorar conceptos <span>→</span></a>
+      </div>
+      <div class="hero-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="anatomy-symbol">✚</div><span class="float-chip chip-heart">♥ Corazón</span><span class="float-chip chip-brain">◉ Cerebro</span><span class="float-chip chip-bone">⌁ Huesos</span></div>
+    </section>
+
+    <section id="categorias" class="section">
+      <div class="section-heading"><div><span class="eyebrow">ORGANIZA TU EXPLORACIÓN</span><h2>Explora por categoría</h2></div><span class="muted">{{ conceptos|length }} conceptos disponibles</span></div>
+      <div class="category-row">
+        <a class="category-card {% if not categoria %}chosen{% endif %}" href="{{ url_for('index', q=q) }}"><span class="category-icon all">✧</span><b>Todos</b><small>Ver todo</small></a>
+        {% for cat in categorias %}
+        <a class="category-card {% if categoria == cat %}chosen{% endif %}" href="{{ url_for('index', categoria=cat, q=q) }}">
+          <span class="category-icon c{{ loop.index % 5 }}">{{ {'Órganos':'♥','Huesos':'⌁','Músculos':'↗','Sistemas':'◉'}.get(cat, '✦') }}</span><b>{{ cat }}</b><small>Explorar</small>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section id="conceptos" class="section concepts-section">
+      <div class="section-heading"><div><span class="eyebrow">BIBLIOTECA ANATÓMICA</span><h2>{% if q %}Resultados para “{{ q }}”{% elif categoria %}{{ categoria }}{% else %}Conceptos para descubrir{% endif %}</h2></div><span class="muted">{{ conceptos|length }} resultado(s)</span></div>
+      {% if conceptos %}
+      <div class="concept-grid">
+        {% for c in conceptos %}
+        <button class="concept-card" type="button" data-id="{{ c.id }}">
+          <div class="concept-visual visual-{{ loop.index % 5 }}">
+            {% if c.imagen_url %}<img src="{{ c.imagen_url }}" alt="Ilustración de {{ c.nombre }}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">{% endif %}
+            <span class="fallback-emoji" {% if c.imagen_url %}style="display:none"{% endif %}>{{ c.emoji }}</span>
+            <span class="visual-tag">{{ c.categoria }}</span>
+          </div>
+          <div class="concept-content"><h3>{{ c.nombre }}</h3><p>{{ c.resumen }}</p><span class="learn-more">Ver descripción <span>↗</span></span></div>
+        </button>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state"><span>⌕</span><h3>No encontramos ese concepto</h3><p>Prueba con otra palabra o selecciona una categoría.</p><a href="{{ url_for('index') }}">Mostrar todos</a></div>
+      {% endif %}
+    </section>
+    <footer>Atlas Humano <span>·</span> Aplicación educativa desarrollada con Flask y base de datos SQL.</footer>
+  </main>
+
+  <div class="modal-backdrop" id="detail-modal" aria-hidden="true">
+    <article class="detail-panel" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+      <button class="close-modal" id="close-modal" aria-label="Cerrar">×</button>
+      <div class="detail-art" id="detail-art"><span id="detail-emoji">❤️</span><img id="detail-image" alt="" hidden></div>
+      <span class="detail-category" id="detail-category"></span>
+      <h2 id="detail-title">Concepto</h2>
+      <p class="detail-summary" id="detail-summary"></p>
+      <div class="detail-block"><h3><span>✧</span> Descripción</h3><p id="detail-description"></p></div>
+      <div class="detail-block"><h3><span>↗</span> Funciones principales</h3><p id="detail-functions"></p></div>
+      <div class="detail-block"><h3><span>✦</span> Datos curiosos</h3><ul id="detail-facts"></ul></div>
+      <div class="location-note"><span>⌖</span><div><b>¿Dónde se encuentra?</b><p id="detail-location"></p></div></div>
+      <div class="detail-footer"><span>ATLAS HUMANO · FICHA EDUCATIVA</span><button id="copy-detail" type="button">Copiar información ↗</button></div>
+    </article>
+  </div>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
